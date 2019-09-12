@@ -36,11 +36,13 @@ void deleteList(node*);
 void insertSubNode(int,int,int,node*);
 void deleteAllSubNodes(node*);
 
-void collapseSubNodes(int, node*); //TODO 
-
 int getLength(node*);
 node* getNodeAt(int, node*);
 
+void collapseSubNodes(int, node*); //TODO 
+
+void (*func[])() = {insertNodePrevious, deleteNode, insertNodeNext,
+			insertSubNode, collapseSubNodes, deleteAllSubNodes};
 // Start of main
 int main()
 {
@@ -49,8 +51,6 @@ int main()
 	int subPosition;
 	int value;
 	
-	void (*func[])() = {insertNodePrevious, deleteNode, insertNodeNext,
-			insertSubNode, collapseSubNodes};
 	// Declaration of the origin Node
 	node* originNode = (node*)malloc(sizeof(node));
 	originNode->previousNode = originNode;
@@ -64,25 +64,25 @@ int main()
 		// TODO: You would have to implement input and processing yourself.
 		if(instruction == DELETE)
 		{
-			(func[instruction+1])(position,originNode);
+			(*func[instruction+1])(position,originNode);
 		}
 		else if(instruction == INSERTSUBNODE)
 		{
 			scanf("%i%i",&subPosition,&value);
-			(func[instruction+1])(position,subPosition,value,originNode);
+			(*func[instruction+1])(position,subPosition,value,originNode);
 		}
 		else if(instruction == NEXT)
 		{
 			scanf("%i",&value);
-			(func[instruction+1])(position,value,originNode);
+			(*func[instruction+1])(position,value,originNode);
 		}
 		else if(instruction == PREVIOUS)
 		{
 			scanf("%i",&value);
-			(func[instruction+1])(position,value,originNode);
+			(*func[instruction+1])(position,value,originNode);
 		} else if(instruction == COLLAPSE)
 		{
-			(func[instruction+1])(position,originNode);
+			(*func[instruction+1])(position,originNode);
 		}
 	}
 
@@ -130,7 +130,7 @@ void collapseSubNodes(int position,node* originNode)
 		cur = cur->nextSubNode;
 	}
 	targetNode->data+=sumOfSubList;
-	deleteAllSubNodes(targetNode);
+	(*func[5])(targetNode);
 }
 
 void insertNodeNext(int position,int value, node* originNode)
@@ -153,7 +153,7 @@ void insertNodePrevious(int position,int value, node* originNode)
 {
 	// Use implementation from ex2. 
 	int len = getLength(originNode);
-	insertNodeNext((position - 1 + len) % len, value, originNode);
+	(*func[2])((position - 1 + len) % len, value, originNode);
 }
 
 void insertSubNode(int position,int subPosition,int value,node* originNode)
@@ -198,7 +198,7 @@ void deleteNode (int position,node* originNode)
 	node* cur = getNodeAt(position, originNode);
 	cur->previousNode->nextNode = cur->nextNode;
 	cur->nextNode->previousNode = cur->previousNode;
-	deleteAllSubNodes(cur);
+	(*func[5])(cur);
 	free(cur); 
 }
 
@@ -210,11 +210,11 @@ void deleteList(node* originNode)
 	originNode->previousNode = originNode;
 	while(cur != originNode) {
 		node* nxt = cur->nextNode;
-		deleteAllSubNodes(cur);
+		(*func[5])(cur);
 		free(cur);
 		cur = nxt;
 	}
-	deleteAllSubNodes(originNode);
+	(*func[5])(originNode);
 }
 
 
