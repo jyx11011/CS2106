@@ -22,10 +22,12 @@ void freeTokenArray(char** strArr, int size);
 
 char* getCommand();
 int checkCommandPath(char* commandPath);
+void removeQuotes(char* token,int len);
 
 int main() {
     //TODO add your code
     char commandPath[25];
+    int i;
     while(1) {
         int tokenNum = 0;
         char** tokens = readTokens(10, 19, &tokenNum, getCommand());
@@ -35,6 +37,8 @@ int main() {
         if(check==1) {
             int childPid = fork();
             if(childPid==0) {
+                for(i=0;i<tokenNum;i++)
+                    removeQuotes(tokens[i],strlen(tokens[i]));
                 tokens[tokenNum]=NULL;
                 execv(commandPath, tokens);
             } else {
@@ -77,6 +81,15 @@ int checkCommandPath(char* commandPath) {
     return 0;
 }
 
+void removeQuotes(char* token,int len) {
+    int i,j=0;
+    for(i=0;i<len;i++){
+        if(token[i]!='"'){
+            token[j++]=token[i];
+        }
+    }
+    token[j]='\0';
+}
 
 char** readTokens(int maxTokenNum, int maxTokenSize, int* readTokenNum, char* buffer)
 //Tokenize buffer

@@ -1,5 +1,5 @@
 /*************************************
- * Lab 2 Exercise 3
+ * Lab 2 Exercise 4
  * Name: Jiang Yuxin
  * Student No: A0177868A
  * Lab Group: 11
@@ -16,7 +16,6 @@
 #include <unistd.h>     //for fork(), wait()
 #include <string.h>     //for string comparison etc
 #include <stdlib.h>     //for malloc()
-
 char** readTokens(int maxTokenNum, int maxTokenSize, int* readTokenNum, char* buffer);
 void freeTokenArray(char** strArr, int size);
 
@@ -25,7 +24,18 @@ int checkCommandPath(char* commandPath);
 int execute(char** tokens, char* commandPath, int tokenNum);
 char** copyCommand(char* commandPath, char **tokens, int lf, int rt);
 void removeQuotes(char* token,int len);
+void parseArgument(char* token, int len);
+void freeEnvVar();
+void removeDollar(char *token, int len);
 
+typedef struct envVar {
+    char name[25],value[25];
+    struct envVar *nxt;
+}env;
+
+env* head=NULL;
+
+env* find(char* name);
 int main() {
     //TODO add your code
     int maxChars=3000;
@@ -80,6 +90,7 @@ int main() {
             printf("%s not found\n",commandPath);
         } else if(exit) {
             printf("Goodbye!\n");
+            freeEnvVar();
             freeTokenArray(tokens,tokenNum);
             return 0;
         } else{
@@ -91,6 +102,7 @@ int main() {
             } else if(exe==1) {
                 printf("Goodbye!\n");
                 freeTokenArray(tokens,tokenNum);
+                freeEnvVar();
                 return 0;
             }
         }
@@ -102,6 +114,34 @@ int main() {
     return 0;
 }
 
+char** copyCommand(char *commandPath, char **tokens, int lf, int rt) {
+    char ** command=(char**) malloc(sizeof(char*) * (rt-lf));
+    int i;
+    for(i=lf;i<rt;i++){
+        removeQuotes(tokens[i],strlen(tokens[i]));
+        command[i-lf] = (char*) malloc(sizeof(char*) * (strlen(tokens[i])+1));
+        strcpy(command[i-lf], tokens[i]);
+    }
+    strcpy(commandPath, tokens[lf]);
+    return command;
+}
+
+void removeDollar(char* token, int len){
+    int i;
+    for(i=1;i<strlen(token);i++) token[i-1]=token[i];
+    token[i-1]='\0';
+}
+
+void parseArgument(char* token, int len) {
+    if(len>0 && token[0]=='$'){
+        removeDollar(token,len);
+        env* var=find(token);
+        if(var==NULL)
+            strcpy(token,"");
+        else
+            strcpy(token,var->value);
+    }
+}
 void removeQuotes(char* token,int len) {
     int i,j=0;
     for(i=0;i<len;i++){
@@ -112,28 +152,47 @@ void removeQuotes(char* token,int len) {
     token[j]='\0';
 }
 
-char** copyCommand(char *commandPath, char **tokens, int lf, int rt) {
-    char ** command=(char**) malloc(sizeof(char*) * (rt-lf));
-    int i;
-    for(i=lf;i<rt;i++){
-        command[i-lf] = (char*) malloc(sizeof(char*) * 19);
-        removeQuotes(tokens[i],strlen(tokens[i]));
-        strcpy(command[i-lf], tokens[i]);
+env* find(char* name) {
+    env* cur = head;
+    while(cur!=NULL){
+        if(strcmp(name, cur->name)==0){
+            return cur;
+        }
+        cur=cur->nxt;
     }
-    strcpy(commandPath, tokens[lf]);
-    return command;
+    return NULL;
 }
 
 int execute(char** tokens, char* commandPath, int tokenNum) {
     int check = checkCommandPath(commandPath);
-
+    int i;
     if(check==0) {
+        for(i=0;i<tokenNum;i++)
+            parseArgument(tokens[i],strlen(tokens[i]));
         int childPid = fork();
         if(childPid==0) {
             tokens[tokenNum]=NULL;
             execv(commandPath, tokens);
         } else {
             waitpid(childPid,NULL,0);
+        }
+    } else if(check==2) {
+       
+        env* var=find(tokens[1]);
+        if(var==NULL){
+            env *v=malloc(sizeof(env));
+            strcpy(v->name, tokens[1]);
+            strcpy(v->value, tokens[2]);
+            v->nxt=head;
+            head=v;
+        }else{
+            strcpy(var->value,tokens[2]);
+        }
+    } else if(check == 3) {
+        removeDollar(tokens[1],strlen(tokens[1]));
+        env* var=find(tokens[1]);
+        if(var!=NULL){
+            strcpy(var->value,"");
         }
     }
     return check;
@@ -146,16 +205,21 @@ char* getCommand() {
     getline(&command, &len, stdin);
     return command;
 }
-
 /*
 * quit:return 1
 * not found: return -1
 * found: return 0
+* set: return 2
+* unset: return 3
 */
 int checkCommandPath(char* commandPath) {
     struct stat p;
     if(strcmp(commandPath, "quit")==0){
         return 1;
+    } else if(strcmp(commandPath, "set")==0){
+        return 2;
+    } else if(strcmp(commandPath, "unset")==0) {
+        return 3;
     } else if(stat(commandPath, &p)==0){
         return 0;
     } else {
@@ -168,6 +232,14 @@ int checkCommandPath(char* commandPath) {
     return -1;
 }
 
+void freeEnvVar(){
+    env *cur=head,*nxt;
+    while(cur!=NULL){
+        nxt=cur->nxt;
+        free(cur);
+        cur=nxt;
+    }
+}
 
 char** readTokens(int maxTokenNum, int maxTokenSize, int* readTokenNum, char* buffer)
 //Tokenize buffer
