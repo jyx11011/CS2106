@@ -25,17 +25,8 @@ int execute(char** tokens, char* commandPath, int tokenNum);
 char** copyCommand(char* commandPath, char **tokens, int lf, int rt);
 void removeQuotes(char* token,int len);
 void parseArgument(char* token, int len);
-void freeEnvVar();
 void removeDollar(char *token, int len);
 
-typedef struct envVar {
-    char name[25],value[25];
-    struct envVar *nxt;
-}env;
-
-env* head=NULL;
-
-env* find(char* name);
 int main() {
     //TODO add your code
     int maxChars=3000;
@@ -90,7 +81,6 @@ int main() {
             printf("%s not found\n",commandPath);
         } else if(exit) {
             printf("Goodbye!\n");
-            freeEnvVar();
             freeTokenArray(tokens,tokenNum);
             return 0;
         } else{
@@ -102,7 +92,6 @@ int main() {
             } else if(exe==1) {
                 printf("Goodbye!\n");
                 freeTokenArray(tokens,tokenNum);
-                freeEnvVar();
                 return 0;
             }
         }
@@ -135,13 +124,15 @@ void removeDollar(char* token, int len){
 void parseArgument(char* token, int len) {
     if(len>0 && token[0]=='$'){
         removeDollar(token,len);
-        env* var=find(token);
-        if(var==NULL)
+        char *value = getenv(token);
+        if(value!=NULL){
+            strcpy(token,value);
+        }else{
             strcpy(token,"");
-        else
-            strcpy(token,var->value);
+        }
     }
 }
+
 void removeQuotes(char* token,int len) {
     int i,j=0;
     for(i=0;i<len;i++){
@@ -150,17 +141,6 @@ void removeQuotes(char* token,int len) {
         }
     }
     token[j]='\0';
-}
-
-env* find(char* name) {
-    env* cur = head;
-    while(cur!=NULL){
-        if(strcmp(name, cur->name)==0){
-            return cur;
-        }
-        cur=cur->nxt;
-    }
-    return NULL;
 }
 
 int execute(char** tokens, char* commandPath, int tokenNum) {
@@ -177,23 +157,10 @@ int execute(char** tokens, char* commandPath, int tokenNum) {
             waitpid(childPid,NULL,0);
         }
     } else if(check==2) {
-       
-        env* var=find(tokens[1]);
-        if(var==NULL){
-            env *v=malloc(sizeof(env));
-            strcpy(v->name, tokens[1]);
-            strcpy(v->value, tokens[2]);
-            v->nxt=head;
-            head=v;
-        }else{
-            strcpy(var->value,tokens[2]);
-        }
+        setenv(tokens[1],tokens[2],1);
     } else if(check == 3) {
         removeDollar(tokens[1],strlen(tokens[1]));
-        env* var=find(tokens[1]);
-        if(var!=NULL){
-            strcpy(var->value,"");
-        }
+        unsetenv(tokens[1]);
     }
     return check;
 }
@@ -230,15 +197,6 @@ int checkCommandPath(char* commandPath) {
         }
     }
     return -1;
-}
-
-void freeEnvVar(){
-    env *cur=head,*nxt;
-    while(cur!=NULL){
-        nxt=cur->nxt;
-        free(cur);
-        cur=nxt;
-    }
 }
 
 char** readTokens(int maxTokenNum, int maxTokenSize, int* readTokenNum, char* buffer)
