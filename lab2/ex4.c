@@ -31,7 +31,7 @@ int main() {
     //TODO add your code
     int maxChars=3000;
     int maxTokens=130;
-    int maxArgLen=20;
+    int maxArgLen=19;
 
     char commandPath[25];
     char** command;
@@ -108,7 +108,7 @@ char** copyCommand(char *commandPath, char **tokens, int lf, int rt) {
     int i;
     for(i=lf;i<rt;i++){
         removeQuotes(tokens[i],strlen(tokens[i]));
-        command[i-lf] = (char*) malloc(sizeof(char*) * (strlen(tokens[i])+1));
+        command[i-lf] = (char*) malloc(sizeof(char) * 19);
         strcpy(command[i-lf], tokens[i]);
     }
     strcpy(commandPath, tokens[lf]);
@@ -117,7 +117,7 @@ char** copyCommand(char *commandPath, char **tokens, int lf, int rt) {
 
 void removeDollar(char* token, int len){
     int i;
-    for(i=1;i<strlen(token);i++) token[i-1]=token[i];
+    for(i=1;i<len;i++) token[i-1]=token[i];
     token[i-1]='\0';
 }
 

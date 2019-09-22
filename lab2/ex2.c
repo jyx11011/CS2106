@@ -19,10 +19,10 @@
 
 char** readTokens(int maxTokenNum, int maxTokenSize, int* readTokenNum, char* buffer);
 void freeTokenArray(char** strArr, int size);
+int isEnd(char *ch);
 
 char* getCommand();
 int checkCommandPath(char* commandPath);
-void removeQuotes(char* token,int len);
 
 int main() {
     //TODO add your code
@@ -32,13 +32,12 @@ int main() {
         int tokenNum = 0;
         char** tokens = readTokens(10, 19, &tokenNum, getCommand());
         if(tokenNum<=0) {freeTokenArray(tokens,tokenNum); continue;}
+        
         strcpy(commandPath, tokens[0]);
         int check = checkCommandPath(commandPath);
         if(check==1) {
             int childPid = fork();
             if(childPid==0) {
-                for(i=0;i<tokenNum;i++)
-                    removeQuotes(tokens[i],strlen(tokens[i]));
                 tokens[tokenNum]=NULL;
                 execv(commandPath, tokens);
             } else {
@@ -46,6 +45,7 @@ int main() {
             }
         } else if(check==-1){
             printf("Goodbye!\n");
+            fflush(stdout);
             freeTokenArray(tokens,tokenNum);
             return 0;
         } else {
@@ -53,6 +53,7 @@ int main() {
         }
         printf("\n");
         freeTokenArray(tokens,tokenNum);
+        fflush(stdout);
     }
     return 0;
 }
@@ -60,7 +61,8 @@ int main() {
 char* getCommand() {
     char *command = NULL;
     size_t len = 0;
-    printf("GENIE > ");
+    printf("GENIE>");
+    fflush(stdout);
     getline(&command, &len, stdin);
     return command;
 }
@@ -81,14 +83,8 @@ int checkCommandPath(char* commandPath) {
     return 0;
 }
 
-void removeQuotes(char* token,int len) {
-    int i,j=0;
-    for(i=0;i<len;i++){
-        if(token[i]!='"'){
-            token[j++]=token[i];
-        }
-    }
-    token[j]='\0';
+int isEnd(char *ch){
+    return ch==NULL || *ch=='\n' || *ch=='\0';
 }
 
 char** readTokens(int maxTokenNum, int maxTokenSize, int* readTokenNum, char* buffer)
@@ -101,17 +97,36 @@ char** readTokens(int maxTokenNum, int maxTokenSize, int* readTokenNum, char* bu
 //  - should use the freeTokenArray to free memory after use!
 {
     char** tokenStrArr;
-    char* token;
-    int i;
+    int i,j;
 
     //allocate token array, each element is a char*
     tokenStrArr = (char**) malloc(sizeof(char*) * maxTokenNum);
-    
-    //Nullify all entries
+  
     for (int i = 0; i < maxTokenNum; i++) {
-        tokenStrArr[i] = NULL;
+        tokenStrArr[i] = (char*) malloc(sizeof(char) * (maxTokenSize+1));
     }
 
+    i=0;
+    char* ch = buffer;
+    while(!isEnd(ch)){
+        while(ch!=NULL && *ch==' ') {ch++;}
+        if(isEnd(ch)) break;
+        j=0;
+        while(!isEnd(ch) && *ch!=' '){
+            if(*ch=='"'){
+                ch++;
+                while(*ch!='"') {tokenStrArr[i][j++]=*ch;ch++;}
+                ch++;
+            }else{
+                tokenStrArr[i][j++]=*ch;
+                ch++;
+            }
+        }
+        tokenStrArr[i][j]='\0';
+        i++;
+    }
+
+    /*
     token = strtok(buffer, " \n");
     
     i = 0;
@@ -128,9 +143,8 @@ char** readTokens(int maxTokenNum, int maxTokenSize, int* readTokenNum, char* bu
         i++;
         token = strtok(NULL, " \n");
     }
-    
-    *readTokenNum = i;
-    
+    */
+    *readTokenNum = i;   
     return tokenStrArr;
 }
 

@@ -1,0 +1,8 @@
+ls
+/bin/ls
+ls -al
+ps
+ps -o ppid -o pid
+ps-l
+echo "abc   ddd"
+quit

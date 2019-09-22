@@ -30,7 +30,7 @@ int main() {
     //TODO add your code
     int maxChars=3000;
     int maxTokens=130;
-    int maxArgLen=20;
+    int maxArgLen=19;
 
     char commandPath[25];
     char** command;
@@ -116,7 +116,7 @@ char** copyCommand(char *commandPath, char **tokens, int lf, int rt) {
     char ** command=(char**) malloc(sizeof(char*) * (rt-lf));
     int i;
     for(i=lf;i<rt;i++){
-        command[i-lf] = (char*) malloc(sizeof(char*) * 19);
+        command[i-lf] = (char*) malloc(sizeof(char) * 19);
         removeQuotes(tokens[i],strlen(tokens[i]));
         strcpy(command[i-lf], tokens[i]);
     }
