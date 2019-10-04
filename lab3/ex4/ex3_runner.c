@@ -53,7 +53,6 @@ int main(int argc, char** argv)
     
     concurrently_moving_cars_max = concurrently_moving_cars = 0;
     sem_init(&concurrently_moving_cars_mutex, 0, 1);
-    
     concurrent_cars_max = concurrent_cars = 0;
     sem_init(&concurrent_cars_mutex, 0, 1);
     
