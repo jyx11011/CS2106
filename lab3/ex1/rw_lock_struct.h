@@ -7,11 +7,12 @@
 
 
 #include <pthread.h>
+#include <semaphore.h>
 
 typedef struct {
-  pthread_mutex_t mutex;
+  sem_t mutex;
   int reader_count;
   int writer_count;
-  pthread_mutex_t empty;
+  sem_t empty;
 } rw_lock;
 
