@@ -48,7 +48,7 @@ void os_run(int initial_num_pages, page_table *pg_table){
         // retrieve the index of the page that the user program wants, or -1 if the user program has terminated
             int const requested_page = info.si_value.sival_int;
             if (requested_page == -1) break;
-            if (!(requested_page < num_pages && page_mapped[requested_page]==1)) {
+            if (!(requested_page < num_pages && requested_page>=0 && page_mapped[requested_page]==1)) {
                 union sigval reply_value;
                 reply_value.sival_int = 1;
                 sigqueue(info.si_pid, SIGCONT, reply_value);
@@ -107,8 +107,11 @@ void os_run(int initial_num_pages, page_table *pg_table){
                     if(pg_table->entries[page_num].valid==1){
                         pg_table->entries[page_num].dirty=0;
                         pg_table->entries[page_num].valid=0;
+                        pg_table->entries[page_num].referenced=0;
+                        frame_page[pg_table->entries[page_num].frame_index]=-1;
                     }
                     disk_delete(page_num);
+                    page_created[page_num]=0;
                 }
                 union sigval reply_value;
                 reply_value.sival_int = 0;

@@ -41,7 +41,7 @@ void os_run(int initial_num_pages, page_table *pg_table){
         // retrieve the index of the page that the user program wants, or -1 if the user program has terminated
         int const requested_page = info.si_value.sival_int;
         if (requested_page == -1) break;
-        if (requested_page >= initial_num_pages) {
+        if (requested_page >= initial_num_pages || requested_page<0) {
             union sigval reply_value;
             reply_value.sival_int = 1;
             sigqueue(info.si_pid, SIGCONT, reply_value);
@@ -63,6 +63,8 @@ void os_run(int initial_num_pages, page_table *pg_table){
             disk_read(next_victim, requested_page);
             pg_table->entries[requested_page].valid = 1;
             pg_table->entries[requested_page].frame_index=next_victim;
+            pg_table->entries[requested_page].referenced=0;
+            pg_table->entries[requested_page].dirty=0;
             next_victim=(next_victim+1)%frame_size;
 
             // tell the MMU that we are done updating the page table
