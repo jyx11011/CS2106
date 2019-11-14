@@ -12,10 +12,16 @@
 
 int my_fflush(MY_FILE *stream) {
 	if(stream->mode==1){
+		if(stream->apd)
+				lseek(stream->fd, 0, SEEK_END);
 		ssize_t wrtsz = write(stream->fd, stream->buffer, stream->sz);
-		stream->mode=0;
-		if(wrtsz==-1) return MY_EOF;
-		else return 0;
+		if(wrtsz==-1) 
+			return MY_EOF;
+		else {
+			stream->mode=0;
+			stream->sz=0;
+			return 0;
+		}
 	} else if(stream->mode==-1){
 		lseek(stream->fd, -stream->sz, SEEK_CUR);
 		stream->sz=0;

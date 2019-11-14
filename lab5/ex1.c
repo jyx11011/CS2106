@@ -67,6 +67,8 @@ MY_FILE *my_fopen(const char *pathname, const char *mode) {
 	f->head = 0;
 	f->sz = 0; 
 	f->mode = 0;
+	if(mode[0]=='a') f->apd=1;
+	else f->apd=0;
 	return f;
 }
 

@@ -14,7 +14,6 @@
 
 #ifndef MY_STDIO_H
 #define MY_STDIO_H
-#define BUFFER_SIZE 4096
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -22,6 +21,7 @@
 #include <fcntl.h>
 #include <string.h>
 
+#define BUFFER_SIZE 4096
 #define MY_EOF (-1)
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
@@ -31,6 +31,7 @@ typedef struct {
 	char* buffer;
 	int head, sz;
 	int mode;
+	int apd;
 } MY_FILE; 
 
 MY_FILE *my_fopen(const char *pathname, const char *mode);

@@ -24,6 +24,8 @@ size_t my_fwrite(const void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 		wrtcur = BUFFER_SIZE - stream->sz;
 		wrt -= wrtcur;
 		while(wrt>0) {
+			if(stream->apd)
+				lseek(stream->fd, 0, SEEK_END);
 			ssize_t wrtsz = write(stream->fd, stream->buffer, BUFFER_SIZE);
 			if(wrtsz==-1) return -1;
 			
